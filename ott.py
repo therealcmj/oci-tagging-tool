@@ -42,4 +42,7 @@ if __name__ == '__main__':
 
                 t.queueUpdate( item, cfg._change )
 
-            t.executeUpdate(cfg._change)
+            if cfg._dryRun:
+                logging.info("Dry run. Changes not being made")
+            else:
+                t.executeUpdate(cfg._change)

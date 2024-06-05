@@ -56,6 +56,8 @@ class config:
     _home_region = None
     _regions = []
 
+    _dryRun = True
+
     _search_string = None
     _change = None
 
@@ -105,6 +107,13 @@ class config:
         if cmd.debug:
             rootLogger.setLevel("DEBUG")
             logging.debug("Log level set to DEBUG")
+
+        if cmd.dryrun:
+            logging.info("Dry Run is set - changes will not be made")
+            self._dryRun = True
+        else:
+            logging.info("Dry Run is NOT set - changes WILL be made")
+            self._dryRun = False
 
 
         # then process the other arguments
