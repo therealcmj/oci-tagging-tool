@@ -150,8 +150,40 @@ class tagger(ociClient):
                         bulk_edit_operations=[beod]
                     )
 
+                    custom_retry_strategy = oci.retry.RetryStrategyBuilder(
+                        # Make up to 10 service calls
+                        max_attempts_check=True,
+                        max_attempts=100,
+
+                        # Don't exceed a total of 600 seconds for all service calls
+                        total_elapsed_time_check=True,
+                        total_elapsed_time_seconds=600,
+
+                        # Wait 45 seconds between attempts
+                        retry_max_wait_between_calls_seconds=45,
+
+                        # Use 2 seconds as the base number for doing sleep time calculations
+                        retry_base_sleep_time_seconds=2,
+
+                        # Retry on certain service errors:
+                        #
+                        #   - 5xx code received for the request
+                        #   - Any 429 (this is signified by the empty array in the retry config)
+                        #   - 400s where the code is QuotaExceeded or LimitExceeded
+                        service_error_check=True,
+                        service_error_retry_on_any_5xx=True,
+                        service_error_retry_config={
+                            400: ['QuotaExceeded', 'LimitExceeded'],
+                            429: []
+                        },
+
+                        # Use exponential backoff and retry with full jitter, but on throttles use
+                        # exponential backoff and retry with equal jitter
+                        backoff_type=oci.retry.BACKOFF_FULL_JITTER_EQUAL_ON_THROTTLE_VALUE
+                    ).get_retry_strategy()
+
                     logging.debug("Sending request")
-                    response = self.clients[region].bulk_edit_tags( bulk_edit_tags_details=bed )
+                    response = self.clients[region].bulk_edit_tags( bulk_edit_tags_details=bed, retry_strategy=custom_retry_strategy )
                     logging.debug("Response")
                     logging.debug(response.headers)
 
