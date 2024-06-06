@@ -33,7 +33,7 @@ class tagger(ociClient):
     # the code I'm writing in ott.py will execute the queued changes region by region
 
     def __init__(self, ottconfig):
-        super().__init__(ottconfig, oci.identity.IdentityClient)
+        super().__init__(ottconfig, oci.identity.IdentityClient, oci.identity.IdentityClientCompositeOperations)
 
         # get a list of the supported resources
         result = oci.pagination.list_call_get_all_results(

@@ -8,7 +8,7 @@ class search(ociClient):
     items = {}
 
     def __init__(self, ottconfig):
-        super().__init__( ottconfig, oci.resource_search.ResourceSearchClient)
+        super().__init__( ottconfig, oci.resource_search.ResourceSearchClient,oci.resource_search.ResourceSearchClientCompositeOperations)
         return
 
     def find_resource(self, query):
