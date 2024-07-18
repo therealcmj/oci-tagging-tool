@@ -80,7 +80,7 @@ class config:
         parser.add_argument('-cf', default="~/.oci/config", dest='config_file', help='OCI Config file')
         parser.add_argument('-cp', default="DEFAULT", dest='config_profile', help='Config Profile inside the config file')
 
-        parser.add_argument('-l', '-log', dest='log_file', help='output log file')
+        parser.add_argument('-l', '-log', dest='log_file', type=argparse.FileType('w'), help='output log file')
         parser.add_argument('-d', '-debug', dest='debug', default=False, action='store_true', help='Enable debug')
         parser.add_argument('-n', "--dry-run", dest='dryrun', default=False, action='store_true', help="Dry run - do not actually make the specified changes")
 

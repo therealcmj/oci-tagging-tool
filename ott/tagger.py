@@ -103,6 +103,7 @@ class tagger(ociClient):
                         id = item.identifier,
                         resource_type = item.resource_type
                     ))
+                logging.debug("There are now {} items to change in compartment {} in region {}".format(len(self._tochange[item.region][item.compartment_id]), item.compartment_id, item.region))
 
             else:
                 logging.error("Resource {} of type {} is NOT supported by bulk tagging API".format(item.identifier, item.resource_type))
