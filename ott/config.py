@@ -57,6 +57,7 @@ class config:
     _regions = []
 
     _dryRun = True
+    _wait = False
 
     _search_string = None
     _change = None
@@ -81,10 +82,14 @@ class config:
         parser.add_argument('-cp', default="DEFAULT", dest='config_profile', help='Config Profile inside the config file')
 
         parser.add_argument('-l', '-log', dest='log_file', type=argparse.FileType('w'), help='output log file')
+
+        # flags
         parser.add_argument('-d', '-debug', dest='debug', default=False, action='store_true', help='Enable debug')
         parser.add_argument('-n', "--dry-run", dest='dryrun', default=False, action='store_true', help="Dry run - do not actually make the specified changes")
+        parser.add_argument("-w", "--wait", dest="wait", default=False, action='store_true', help="Wait for Work Requests to complete (success or failure)")
 
         parser.add_argument('-rg','--region', dest='regions', help="Comma list of regions separated (defaults to all subscribed regions)")
+
 
         # then positional arguments:
         parser.add_argument('query')
@@ -115,6 +120,12 @@ class config:
             logging.info("Dry Run is NOT set - changes WILL be made")
             self._dryRun = False
 
+        if cmd.wait:
+            logging.info("Wait is set - OTT WILL wait for Work Requests to complete before exiting")
+            self._wait = True
+        else:
+            logging.info("Wait is NOT set - OTT will NOT wait for Work Requests to complete before exiting")
+            self._wait = False
 
         # then process the other arguments
         import oci

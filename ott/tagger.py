@@ -1,5 +1,6 @@
 import logging
 import oci
+import json
 
 from ott.ociClient import ociClient
 
@@ -7,6 +8,7 @@ class tagger(ociClient):
     _resourcetypes = []
 
     _tochange = {}
+    _workRequests = {}
 
     # _tochange is going to be
     # {
@@ -108,7 +110,7 @@ class tagger(ociClient):
             else:
                 logging.error("Resource {} of type {} is NOT supported by bulk tagging API".format(item.identifier, item.resource_type))
 
-    def executeUpdate(self, change):
+    def executeUpdate(self, change, wait):
 
         # build the actual change
         beod = None
@@ -184,14 +186,68 @@ class tagger(ociClient):
                     ).get_retry_strategy()
 
                     logging.debug("Sending request")
+                    # logging.debug("Request: {}".format(json.dumps(bed)))
+
                     response = self.clients[region].bulk_edit_tags( bulk_edit_tags_details=bed, retry_strategy=custom_retry_strategy )
                     logging.debug("Response")
                     logging.debug(response.headers)
 
-                    logging.info("Work request ID {}".format(response.headers["opc-work-request-id"]))
+                    wrid = response.headers["opc-work-request-id"]
+                    if not region in self._workRequests:
+                        self._workRequests[region] = []
+                    self._workRequests[region].append(wrid)
+
+                    logging.info("Work request ID {}".format(wrid))
 
                 # these three lines clean up as we go
                 self._tochange[region][compartment] = []
             self._tochange[region] = {}
         self._tochange = {}
+
+
+        if wait:
+            # at this point _workRequests is something like
+            # {
+            #   "us-ashburn-1": [ "ocid1.taggingworkrequest.oc1..a", "ocid1.taggingworkrequest.oc1..b"...]
+            #   "us-phoenix-1": [ "ocid1.taggingworkrequest.oc1..a" ]
+            # }
+            #
+            # with any(?) luck a bunch of those will be done already
+
+            while len(self._workRequests) > 0:
+                for region in self._workRequests:
+                    logging.debug("Waiting for {} Work Requests in region {} to finish".format(len(self._workRequests[region]),region))
+                    for wrid in self._workRequests[region]:
+                        result = self.clients[region].get_tagging_work_request(wrid)
+
+                        # We consider "SUCCEEDED", PARTIALLY_SUCCEEDED, CANCELLED, an FAILED as done
+                        # which leaves ACCEPTED, IN_PROGRESS, or CANCELLING as "still going"
+                        # I feel like there ought to be a utlity function for this. TODO: look for one
+                        # my left arm for a switch / case
+                        logging.info("Work request ID {} is in state {}".format(wrid,result.data.status))
+                        if result.data.status == "ACCEPTED" or result.data.status == "IN_PROGRESS":
+                            logging.debug("Still running")
+
+                        # slightly wasteful
+                        elif result.data.status == "SUCCEEDED" or result.data.status == "PARTIALLY_SUCCEEDED" or result.data.status == "CANCELLED" or result.data.status == "FAILED":
+                            logging.info("Work request {} complete - state is {}".format(wrid,result.data.status))
+                            self._workRequests[region].remove(wrid)
+
+                        else:
+                            logging.error("UNKNOWN STATE FOR WORK REQUEST!")
+                            logging.error("Please open a bug and report WR state ID {}".format(result.data.status))
+                            logging.error("In order to avoid infinite loop I am considering that request complete. BUT THIS IS A BUG!")
+                            self._workRequests[region].remove(wrid)
+
+                    # you can't do this because you're not allowed to change the dict during an iteration
+                    # if 0 == len( self._workRequests[region]):
+                    #     del self._workRequests[region]
+                # so make a copy of it and then only copy over the entries that have something in them still
+                # I'm sure there's a better way, but it's 9:30 at night and I'm tired
+                # TODO: think about this some more
+                copy = self._workRequests
+                self._workRequests = {}
+                for region in copy:
+                    if len( copy[region]) > 0:
+                        self._workRequests[region] = copy[region]
 
