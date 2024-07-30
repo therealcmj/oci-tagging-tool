@@ -97,8 +97,8 @@ class config:
 
         # I was going to make you specify ff or d, but if the tag contains a . then it's a defined tag. If not it's a freform tag
         # parser.add_argument('TagNameSpace', choices=["d","defined","ff","freeform"])
-        parser.add_argument('tag')
-        parser.add_argument('value', default="")
+        parser.add_argument('tag', nargs='+')
+        # parser.add_argument('value', default="")
 
         cmd = parser.parse_args()
 
@@ -195,4 +195,4 @@ class config:
         self._search_string = cmd.query
         self._action = cmd.action
 
-        self._change = self.change( self._action, cmd.tag, cmd.value)
+        self._change = self.change( self._action, cmd.tag[0], "" if len( cmd.tag) == 1 else cmd.tag[1])

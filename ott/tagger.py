@@ -116,9 +116,22 @@ class tagger(ociClient):
         beod = None
 
         if change.isDelete():
-            # untested!
             if change.isDefined():
-                raise Exception("Not implemented yet")
+                beod = oci.identity.models.BulkEditOperationDetails(
+                    operation_type="REMOVE",
+                    defined_tags={
+                        change.tagNamespace(): {
+                            change.tagName(): ""
+                        }
+                    }
+                )
+            else:
+                beod = oci.identity.models.BulkEditOperationDetails(
+                    operation_type="REMOVE",
+                    freeform_tags={
+                        change.tagName(): ""
+                    }
+                )
 
         else:
             if change.isDefined():
