@@ -98,9 +98,6 @@ This is incomplete. And you should probably not use it yet. But I'm putting it o
 and it's useful. And I'm actively iterating on it.
 
 Anyway these are the known issues
-* remove doesn't work
 * it doesn't work on Freeform tags
 * some resource types that supposedly work don't
 * it relies on Search to have updated tag values. Search is "eventually consistent" with the actual resources so unexpected writes (or faailures to update) should be expected
-
-
