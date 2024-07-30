@@ -19,12 +19,16 @@ class search(ociClient):
             logging.debug("Preparing to execute query with regional search client for region {}".format(region))
             sc = self.clients[region]
 
-            # TODO: remember to add paging support
-            response = sc.search_resources( search_details=oci.resource_search.models.StructuredSearchDetails(type="Structured", query=query))
+            # this code now gets every page of the search results.
+            # unfortunately there's no callback for it to notify the caller of progress it's making
+            # TODO: look into oci.pagination.list_call_get_all_results_generator() instead.
+            #       though that will require a bit of rework of the calling code
+            response = oci.pagination.list_call_get_all_results(
+                sc.search_resources,
+                search_details=oci.resource_search.models.StructuredSearchDetails(type="Structured", query=query)
+            )
+            logging.info( "Response contains {} item(s) in region {}".format( len(response.data),region ) )
+            self.items[region] = response.data
 
-            logging.info( "Response contains {} item(s) in region {}".format( len(response.data.items),region ) )
-            self.items[region] = response.data.items
-
-        # TODO: what should we return here?
         return self.items
 
