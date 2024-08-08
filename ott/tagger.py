@@ -1,6 +1,7 @@
 import logging
 import oci
 import json
+import time
 
 from ott.ociClient import ociClient
 
@@ -255,6 +256,8 @@ class tagger(ociClient):
                     # you can't do this because you're not allowed to change the dict during an iteration
                     # if 0 == len( self._workRequests[region]):
                     #     del self._workRequests[region]
+                    logging.debug("Waiting 5 seconds")
+                    time.sleep(5)
                 # so make a copy of it and then only copy over the entries that have something in them still
                 # I'm sure there's a better way, but it's 9:30 at night and I'm tired
                 # TODO: think about this some more

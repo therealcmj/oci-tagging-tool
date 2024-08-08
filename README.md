@@ -3,7 +3,7 @@
 
 ![OTT Logo](OTT-logo.png)
 
-## Background reading
+## Background
 
 Nearly every resource in [Oracle Cloud Infrastructure](https://www.oracle.com/cloud/) can be tagged. Either at
 creation time or later. And you set/edit/remove those tags via the console, the CLI, or through the APIs.
@@ -20,12 +20,14 @@ Read about what/why/how here:
 In my blog post above I mention that the bulk API isn't *super* convenient as it requires JSON inputs and only works on one compartment. This tool simplifies things quite a bit.
 
 It lets you:
-* search for resources - wherever they are in the tenancy
+* operate on resources **anywhere** in the tenancy
 * specify an update to be made to their tags
-* see the changes that would be done
+* see the changes that would be done (i.e. dry run)
 * and optionally, actually make those changes
 
 ## Command Line options
+
+This tool uses similar command line arguments as many other OCI tools, so it should be familiar to many users.
 
 ```
 $ ./ott.py
@@ -87,17 +89,56 @@ query all resources where (definedTags.namespace = "Oracle-Standard" && definedT
 
 ```
 
-# More info
+### Useful Example Queries
 
-A blog post will be forthcoming
+#### Find all resources inside a compartment.
 
+e.g. so you can tag their owner
+```
+query all resources where compartmentId="ocid1.compartment.oc1..XXXX"
+```
+
+#### Find all compartments inside a given compartment:
+
+e.g. if you wanted to tag only one kinds of resource
+```
+query Compartment resources where compartmentId="ocid1.compartment.oc1..XXX"
+```
+
+
+#### Find VNICs in a subnet
+```
+query Vnic resources where additionalDetails.subnetId="ocid1.subnet.oc1.iad.XXX"
+```
+
+#### Find Oracle Integration gen2 instances with the Standard license type  
+```
+query IntegrationInstance resources return allAdditionalFields where integrationInstanceType="STANDARD"
+```
+
+#### Find Oracle Integration gen3 instances with the Standard license type
+```
+query IntegrationInstance resources return allAdditionalFields where integrationInstanceType="STANDARDX"
+```
+
+#### Find all resources owned by Chris Johnson.
+e.g. so you can change the "OwnerEmail"
+```
+query all resources where (definedTags.namespace = "Oracle-Standard" && definedTags.key = "OwnerEmail" && definedTags.value != "christopher.johnson@oracle.com")
+```
 
 # Known issues
 
-This is incomplete. And you should probably not use it yet. But I'm putting it out there because we're using it today
-and it's useful. And I'm actively iterating on it.
+This tool was built for our own use but we find it quite useful. So I'm publishing it for others to benefit from.
 
-Anyway these are the known issues
-* it doesn't work on Freeform tags
-* some resource types that supposedly work don't
-* it relies on Search to have updated tag values. Search is "eventually consistent" with the actual resources so unexpected writes (or faailures to update) should be expected
+These are the known issues
+* OTT doesn't support on Freeform tags (because the Bulk Tagging API doesn't)
+  * We are working with engineering on roadmap for this
+  * If the bulk API won't include this in the near term I will likely enhance OTT
+* some resource types that *supposedly* work don't
+  * if you find one please flag it for us and we'll get it fixed 
+* OTT relies on Search to have updated tag values
+  * Search is "eventually consistent" with the actual resources in OCI
+  * when making a large number of changes you should anticipate unnecessary updates or failures to update
+
+As always, I'm happy to take contributions - just do the usual fork, branch, change, pull request, and I'll happily include them!
