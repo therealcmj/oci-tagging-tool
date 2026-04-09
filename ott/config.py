@@ -182,6 +182,10 @@ class config:
         else:
             logging.debug("Regions not specified on command line.")
 
+            regions = self.identity_client.list_region_subscriptions(self.ociconfig["tenancy"]).data
+            for region in regions:
+                self._regions.append(region.region_name)
+
         logging.info( "{} Regions to be operated upon: {}".format(len(self._regions), self._regions))
 
         logging.info("Getting subscribed regions...")
@@ -196,3 +200,10 @@ class config:
         self._action = cmd.action
 
         self._change = self.change( self._action, cmd.tag[0], "" if len( cmd.tag) == 1 else cmd.tag[1])
+
+        logging.info("Query:")
+        logging.info("{}".format(self._search_string))
+
+        logging.info("Requested change to be made:")
+        logging.info("   Action: {}".format(self._action))
+        logging.info("   Change: {}".format(self._change.change()))

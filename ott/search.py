@@ -6,16 +6,18 @@ from ott.ociClient import ociClient
 
 class search(ociClient):
     items = {}
+    regions = []
 
     def __init__(self, ottconfig):
         super().__init__( ottconfig, oci.resource_search.ResourceSearchClient,oci.resource_search.ResourceSearchClientCompositeOperations)
+        self.regions = list(ottconfig._regions)
         return
 
     def find_resource(self, query):
         logging.info( "Searching with query: {}".format(query))
         # we're going to return **ALL** of the matching resources
 
-        for region in self.clients:
+        for region in self.regions:
             logging.debug("Preparing to execute query with regional search client for region {}".format(region))
             sc = self.clients[region]
 
