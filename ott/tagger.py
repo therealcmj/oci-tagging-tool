@@ -40,7 +40,7 @@ class tagger(ociClient):
 
         # get a list of the supported resources
         result = oci.pagination.list_call_get_all_results(
-            self.clients[ottconfig._home_region].list_bulk_edit_tags_resource_types,
+            self.clients[self.home_region].list_bulk_edit_tags_resource_types,
             *[],
             **{}
         ).data

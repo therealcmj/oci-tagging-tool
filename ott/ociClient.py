@@ -4,10 +4,12 @@ import logging
 class ociClient(object):
     clients = {}
     compositeClients = {}
+    home_region = None
 
     def __init__(self, ottconfig, clientClass, clientCompositeClass=None ):
         self.clients = {}
         self.compositeClients = {}
+        self.home_region = ottconfig._home_region
 
         logging.debug("Initializing client class {} for home region {}".format(clientClass, ottconfig._home_region))
         self.clients[ottconfig._home_region] = clientClass(ottconfig.ociconfig)
