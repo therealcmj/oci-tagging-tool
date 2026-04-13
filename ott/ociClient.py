@@ -6,15 +6,22 @@ class ociClient(object):
     compositeClients = {}
 
     def __init__(self, ottconfig, clientClass, clientCompositeClass=None ):
+        self.clients = {}
+        self.compositeClients = {}
+
         logging.debug("Initializing client class {} for home region {}".format(clientClass, ottconfig._home_region))
         self.clients[ottconfig._home_region] = clientClass(ottconfig.ociconfig)
         if clientCompositeClass:
             self.compositeClients[ottconfig._home_region] = clientCompositeClass(ottconfig.ociconfig)
 
         for region in ottconfig._regions:
+            if region == ottconfig._home_region:
+                logging.debug( "Skipping client initialization for region {} since it's the home region and already initialized".format(region) )
+                continue
+            
             logging.debug("Initializing client class {} for region {}".format(clientClass,region))
 
-            rconfig = ottconfig.ociconfig
+            rconfig = dict(ottconfig.ociconfig)
             logging.debug("Old region in this OCI config dict: {}".format(rconfig["region"]))
             rconfig["region"] = region
             logging.debug("New region in this OCI config dict: {}".format(rconfig["region"]))
@@ -22,3 +29,5 @@ class ociClient(object):
             self.clients[region] = clientClass(rconfig)
             if clientCompositeClass:
                 self.compositeClients[region] = clientCompositeClass(ottconfig.ociconfig)
+            
+            logging.debug("Initialized.")
