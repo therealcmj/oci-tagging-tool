@@ -49,6 +49,13 @@ class config:
         def tagValue(self):
             return self._tagValue
 
+        def change(self):
+            # ret += "delete" if self.isDelete() else "set"
+            ret = 'tag namespace "{}" tag name "{}"'.format(self.tagNamespace(),self.tagName())
+            if not self.isDelete():
+                ret += ' to value "{}"'.format(self.tagValue())
+            return ret
+
     signer = None
     ociconfig = None
 
