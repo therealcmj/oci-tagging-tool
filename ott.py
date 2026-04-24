@@ -7,14 +7,6 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(threadName)s %(levelname)7s %(module)s:%(funcName)s -> %(message)s',
                         level=logging.INFO)
 
-    # should this be here or elsewhere? TBD
-    from pkg_resources import packaging
-    import oci
-    if packaging.version.parse(oci.__version__) < packaging.version.parse("2.123.0"):
-        logging.fatal("Please update your version of the Python oci package")
-        import sys
-        sys.exit(-1)
-
     logging.info("Parsing command line and configuring...")
     from ott.config import config
 
