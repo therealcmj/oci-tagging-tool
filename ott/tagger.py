@@ -78,6 +78,12 @@ class tagger(ociClient):
                 return True
 
         # implied else
+
+        # if there's any value there and I'm configued to "add" only then don't make the change
+        if value and change.isAdd():
+            logging.debug('Requested change is "add", but the value "{}" is already present. Skipping.'.format(value) )
+            return False
+        
         if value == change.tagValue():
             return False
         else:

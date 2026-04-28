@@ -33,6 +33,9 @@ class config:
 
         def isDelete(self):
             return self._changetype == "delete"
+        
+        def isAdd(self):
+            return self._changetype == "add"
 
         def isDefined(self):
             return self._isDefined
@@ -49,11 +52,15 @@ class config:
         def tagValue(self):
             return self._tagValue
 
-        def change(self):
+        def change_description(self):
             # ret += "delete" if self.isDelete() else "set"
             ret = 'tag namespace "{}" tag name "{}"'.format(self.tagNamespace(),self.tagName())
             if not self.isDelete():
                 ret += ' to value "{}"'.format(self.tagValue())
+            if self._changetype == "add":
+                ret += " if no value is present"
+            else:
+                ret += " overwriting any existing value"
             return ret
 
     signer = None
@@ -100,7 +107,7 @@ class config:
 
         # then positional arguments:
         parser.add_argument('query')
-        parser.add_argument('action', choices=["set","delete"])  # NOTE: this is different from the bulk API. I'm simplifying
+        parser.add_argument('action', choices=["set","add","delete"])  # NOTE: this is different from the bulk API. I'm simplifying
 
         # I was going to make you specify ff or d, but if the tag contains a . then it's a defined tag. If not it's a freform tag
         # parser.add_argument('TagNameSpace', choices=["d","defined","ff","freeform"])
@@ -213,4 +220,4 @@ class config:
 
         logging.info("Requested change to be made:")
         logging.info("   Action: {}".format(self._action))
-        logging.info("   Change: {}".format(self._change.change()))
+        logging.info("   Change: {}".format(self._change.change_description()))
