@@ -5,6 +5,9 @@ import time
 
 from ott.ociClient import ociClient
 
+# this contains a list of the resources we've updated already
+updated_resources = dict()
+
 class tagger(ociClient):
     _resourcetypes = []
 
@@ -70,6 +73,21 @@ class tagger(ociClient):
 
         value = self.getTagValue(item, change.tag())
 
+        if (hasattr(item, "lifecycle_state") and
+                (item.lifecycle_state == "DELETED" or
+                item.lifecycle_state == "DELETE_SCHEDULED" or
+                item.lifecycle_state == "PENDING_DELETION" or
+                item.lifecycle_state == "DELETING" or
+                item.lifecycle_state == "TERMINATED" or
+                item.lifecycle_state == "TERMINATING"
+                )):
+            logging.info("Object is deleted - no need to update")
+            return False
+
+        if item.identifier in updated_resources:
+            logging.info("Item {} has already been updated in this run.".format(item.identifier))
+            return False
+
         if change.isDelete():
             # I could do this all on one line but this is more readable
             if None == value:
@@ -106,6 +124,8 @@ class tagger(ociClient):
 
                 if not item.compartment_id in self._tochange[item.region]:
                     self._tochange[item.region][item.compartment_id] = []
+
+                updated_resources[item.identifier] = item
 
                 self._tochange[item.region][item.compartment_id].append(
                     oci.identity.models.BulkEditResource(
