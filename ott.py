@@ -34,8 +34,19 @@ if __name__ == '__main__':
                 # I feel like this should be in tagger. But am not convinced
                 logging.debug("Item info:")
                 logging.debug("          ID: {}".format(item.identifier))
-                logging.debug(" Compartment: {}".format(item.compartment_id))
+
+                if hasattr( item, "display_name" ):
+                    logging.debug("        Name: {}".format(item.display_name))
+
                 logging.debug("        Type: {}".format(item.resource_type))
+
+                if hasattr( item, "description" ):
+                    logging.debug(" Description: {}".format(item.description))
+
+                if hasattr( item, "lifecycle_state" ):
+                    logging.debug("       State: {}".format(item.lifecycle_state))
+
+                logging.debug(" Compartment: {}".format(item.compartment_id))
 
                 # check out my tricky trick...
                 item.region = region
