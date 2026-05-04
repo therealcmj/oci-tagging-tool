@@ -10,7 +10,6 @@ updated_resources = dict()
 
 class tagger(ociClient):
     _resourcetypes = []
-
     _tochange = {}
     _workRequests = {}
 
@@ -39,11 +38,15 @@ class tagger(ociClient):
     # the code I'm writing in ott.py will execute the queued changes region by region
 
     def __init__(self, ottconfig):
+        self._resourcetypes = []
+        self._tochange = {}
+        self._workRequests = {}
+
         super().__init__(ottconfig, oci.identity.IdentityClient, oci.identity.IdentityClientCompositeOperations)
 
         # get a list of the supported resources
         result = oci.pagination.list_call_get_all_results(
-            self.clients[self.home_region].list_bulk_edit_tags_resource_types,
+            self.get_client(self.home_region).list_bulk_edit_tags_resource_types,
             *[],
             **{}
         ).data
@@ -75,6 +78,7 @@ class tagger(ociClient):
 
         if (hasattr(item, "lifecycle_state") and
                 (item.lifecycle_state == "DELETED" or
+                item.lifecycle_state == "Deleted" or
                 item.lifecycle_state == "DELETE_SCHEDULED" or
                 item.lifecycle_state == "PENDING_DELETION" or
                 item.lifecycle_state == "DELETING" or
@@ -228,14 +232,14 @@ class tagger(ociClient):
                     logging.debug("Sending request")
                     # logging.debug("Request: {}".format(json.dumps(bed)))
 
-                    response = self.clients[region].bulk_edit_tags( bulk_edit_tags_details=bed, retry_strategy=custom_retry_strategy )
+                    response = self.get_client(self.home_region).bulk_edit_tags( bulk_edit_tags_details=bed, retry_strategy=custom_retry_strategy )
                     logging.debug("Response")
                     logging.debug(response.headers)
 
                     wrid = response.headers["opc-work-request-id"]
-                    if not region in self._workRequests:
-                        self._workRequests[region] = []
-                    self._workRequests[region].append(wrid)
+                    if not self.home_region in self._workRequests:
+                        self._workRequests[self.home_region] = []
+                    self._workRequests[self.home_region].append(wrid)
 
                     logging.info("Work request ID {}".format(wrid))
 
@@ -258,7 +262,7 @@ class tagger(ociClient):
                 for region in self._workRequests:
                     logging.debug("Waiting for {} Work Requests in region {} to finish".format(len(self._workRequests[region]),region))
                     for wrid in self._workRequests[region]:
-                        result = self.clients[region].get_tagging_work_request(wrid)
+                        result = self.get_client(region).get_tagging_work_request(wrid)
 
                         # We consider "SUCCEEDED", PARTIALLY_SUCCEEDED, CANCELLED, an FAILED as done
                         # which leaves ACCEPTED, IN_PROGRESS, or CANCELLING as "still going"

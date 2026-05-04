@@ -19,7 +19,7 @@ class search(ociClient):
 
         for region in self.regions:
             logging.debug("Preparing to execute query with regional search client for region {}".format(region))
-            sc = self.clients[region]
+            sc = self.get_client(region)
 
             # this code now gets every page of the search results.
             # unfortunately there's no callback for it to notify the caller of progress it's making
